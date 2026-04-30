@@ -1,0 +1,6 @@
+.git
+README.md
+.github
+node_modules
+.env.local
+.next
