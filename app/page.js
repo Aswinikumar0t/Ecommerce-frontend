@@ -43,6 +43,21 @@ function Hero() {
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle mounting and window resize
+  useEffect(() => {
+    setIsMounted(true);
+    setWindowWidth(window.innerWidth);
+    
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -72,11 +87,18 @@ function Hero() {
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
+  // Calculate transform value only on client side
+  const getTransformValue = () => {
+    if (!isMounted) return 0;
+    const slideWidth = windowWidth < 768 ? 101.5 : 102.5;
+    return -(currentSlide * slideWidth);
+  };
+
   return (
     <div className="relative overflow-hidden px-4 md:px-6 lg:px-8 my-4">
       <div 
         className="flex transition-transform duration-500 ease-out gap-4 md:gap-6"
-        style={{ transform: `translateX(-${currentSlide * (100 + (window.innerWidth < 768 ? 1.5 : 2.5))}%)` }}
+        style={{ transform: `translateX(${getTransformValue()}%)` }}
       >
         {banners.map((banner) => (
           <div 
@@ -397,17 +419,31 @@ function OfferBanner() {
 
 // Main Homepage
 export default function Home() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <Hero />
       <SearchBar />
       <Categories />
-      
-      {/* Banner Images with spacing on all sides */}
       <PromoBanner />
       <GridBanners />
-      
       <FeaturedProducts />
       <Features />
       <OfferBanner />
